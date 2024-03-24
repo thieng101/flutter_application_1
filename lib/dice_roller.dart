@@ -1,30 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Dice Roller',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: DiceRoller(),
-        ),
-      ),
-    );
-  }
-}
-
 class DiceRoller extends StatefulWidget {
   const DiceRoller({Key? key}) : super(key: key);
 
@@ -37,6 +13,8 @@ class _DiceRollerState extends State<DiceRoller>
   int currentDiceRoll = 1;
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
+  final TextEditingController _guessController = TextEditingController();
+  String _message = "";
 
   @override
   void initState() {
@@ -61,6 +39,19 @@ class _DiceRollerState extends State<DiceRoller>
 
     setState(() {
       currentDiceRoll = newRoll; // Update the state with the new different roll
+      // Compare with the user's guess
+      final userGuess = int.tryParse(_guessController.text);
+      if (userGuess != null) {
+        if (userGuess < 1 || userGuess > 6) {
+          _message = "Enter a number between 1 and 6.";
+        } else if (userGuess == newRoll) {
+          _message = "You guessed right!";
+        } else {
+          _message = "You guessed wrong. It was $newRoll.";
+        }
+      } else {
+        _message = "Please enter a valid number.";
+      }
     });
 
     _controller.forward(from: 0); // Start the animation from 0 each time
@@ -69,6 +60,7 @@ class _DiceRollerState extends State<DiceRoller>
   @override
   void dispose() {
     _controller.dispose();
+    _guessController.dispose();
     super.dispose();
   }
 
@@ -82,11 +74,7 @@ class _DiceRollerState extends State<DiceRoller>
           child: child,
         );
       },
-      child: Container(
-        width: 200,
-        height: 200,
-        child: Image.asset('assets/image/dice-$currentDiceRoll.png'),
-      ),
+      child: Image.asset('assets/image/dice-$currentDiceRoll.png', width: 200),
     );
   }
 
@@ -95,9 +83,51 @@ class _DiceRollerState extends State<DiceRoller>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        //add padding to text field
+        const Padding(
+            padding: EdgeInsets.only(bottom: 30),
+            child: Text("Dice Roller",
+                style: TextStyle(
+                    fontSize: 35,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.yellow,
+                    fontFamily: "Roboto"))),
+        Padding(
+            padding: const EdgeInsets.only(bottom: 70.0),
+            child: SizedBox(
+                width: 300,
+                child: TextField(
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                  controller: _guessController,
+                  decoration: const InputDecoration(
+                    labelText: "Enter your guess",
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: OutlineInputBorder(
+                      // Used when the TextField is enabled and not focused
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      borderSide: BorderSide(
+                          color:
+                              Colors.white), // Set border color to black here
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      // Used when the TextField is focused
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      borderSide: BorderSide(
+                          color:
+                              Colors.white), // Set border color to black here
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                ))),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 30),
+          child: _buildDiceImage(),
+        ),
         Padding(
           padding: const EdgeInsets.only(bottom: 20),
-          child: _buildDiceImage(),
+          child: Text(_message,
+              style: const TextStyle(fontSize: 20, color: Colors.white)),
         ),
         Container(
           decoration: BoxDecoration(
@@ -140,7 +170,7 @@ class _DiceRollerState extends State<DiceRoller>
               ),
               padding: MaterialStateProperty.all<EdgeInsets>(
                 const EdgeInsets.symmetric(
-                    horizontal: 25, vertical: 10), // Adjust padding
+                    horizontal: 32, vertical: 15), // Adjust padding
               ),
               shadowColor: MaterialStateProperty.all(Colors.transparent),
             ),
